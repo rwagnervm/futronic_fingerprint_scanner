@@ -188,10 +188,36 @@ class _MyAppState extends State<MyApp> {
       _validationStatusCode = validationResponse.statusCode;
       _validationResponseBody = validationResponse.body;
 
+      String statusMsg = 'Validação concluída (Status ${validationResponse.statusCode})';
+
+      if (validationResponse.statusCode == 200) {
+        try {
+          final data = jsonDecode(validationResponse.body);
+          final validacao = data['validacao'];
+          if (validacao != null && validacao['biometria_digital'] != null) {
+            final bioDigital = validacao['biometria_digital'] as List;
+            final matchFingers = bioDigital.where((item) {
+              final sim = item['similaridade'];
+              if (sim is num) return sim > 0.85;
+              if (sim is String) return (double.tryParse(sim) ?? 0.0) > 0.85;
+              return false;
+            }).toList();
+
+            if (matchFingers.isNotEmpty) {
+              final dedos = matchFingers.map((e) => '${e['posicao']} (${e['similaridade']})').join(', ');
+              statusMsg = '✓ Match encontrado: $dedos';
+            } else {
+              statusMsg = '✗ Nenhum dedo com similaridade > 0.85';
+            }
+          }
+        } catch (e) {
+          debugPrint('Erro ao parsear JSON de resposta: $e');
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _validationStatus =
-              'Validação concluída (Status ${validationResponse.statusCode})';
+          _validationStatus = statusMsg;
         });
       }
     } catch (e) {
