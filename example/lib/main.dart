@@ -170,56 +170,96 @@ class _MyAppState extends State<MyApp> {
         },
       };
 
-      // 3. Chamada HTTP para Datavalid
-      final validationResponse = await http.post(
-        Uri.parse(
-          'https://gateway.apiserpro.serpro.gov.br/datavalid-demonstracao/v5/pessoa-fisica/validacao',
-        ),
-        headers: {
-          'accept': 'application/json',
-          'Authorization': 'Bearer 06aef429-a981-3ec5-a1f8-71d38d86481e',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(payload),
-      );
+      // 3. Chamada HTTP para Datavalid com política de retentativa
+      int retries = 0;
+      const maxRetries = 3;
+      bool shouldRetry = false;
+      http.Response? validationResponse;
 
-      _hasValidated = true;
-      _isValidating = false;
-      _validationStatusCode = validationResponse.statusCode;
-      _validationResponseBody = validationResponse.body;
-
-      String statusMsg = 'Validação concluída (Status ${validationResponse.statusCode})';
-
-      if (validationResponse.statusCode == 200) {
-        try {
-          final data = jsonDecode(validationResponse.body);
-          final validacao = data['validacao'];
-          if (validacao != null && validacao['biometria_digital'] != null) {
-            final bioDigital = validacao['biometria_digital'] as List;
-            final matchFingers = bioDigital.where((item) {
-              final sim = item['similaridade'];
-              if (sim is num) return sim > 0.85;
-              if (sim is String) return (double.tryParse(sim) ?? 0.0) > 0.85;
-              return false;
-            }).toList();
-
-            if (matchFingers.isNotEmpty) {
-              final dedos = matchFingers.map((e) => '${e['posicao']} (${e['similaridade']})').join(', ');
-              statusMsg = '✓ Match encontrado: $dedos';
-            } else {
-              statusMsg = '✗ Nenhum dedo com similaridade > 0.85';
-            }
-          }
-        } catch (e) {
-          debugPrint('Erro ao parsear JSON de resposta: $e');
+      do {
+        shouldRetry = false;
+        
+        if (mounted && retries > 0) {
+          setState(() {
+            _validationStatus = 'Retentativa $retries/$maxRetries...';
+          });
         }
-      }
 
-      if (mounted) {
-        setState(() {
-          _validationStatus = statusMsg;
-        });
-      }
+        validationResponse = await http.post(
+          Uri.parse(
+            'https://gateway.apiserpro.serpro.gov.br/datavalid-demonstracao/v5/pessoa-fisica/validacao',
+          ),
+          headers: {
+            'accept': 'application/json',
+            'Authorization': 'Bearer 06aef429-a981-3ec5-a1f8-71d38d86481e',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(payload),
+        );
+
+        _hasValidated = true;
+        _isValidating = false;
+        _validationStatusCode = validationResponse.statusCode;
+        _validationResponseBody = validationResponse.body;
+
+        String statusMsg =
+            'Validação concluída (Status ${validationResponse.statusCode})';
+
+        if (validationResponse.statusCode == 200) {
+          try {
+            final data = jsonDecode(validationResponse.body);
+            final validacao = data['validacao'];
+            if (validacao != null && validacao['biometria_digital'] != null) {
+              final bioDigital = validacao['biometria_digital'] as List;
+              
+              bool hasHighSimilarity = false;
+              bool hasCodigoRetorno = false;
+              
+              final matchFingers = bioDigital.where((item) {
+                if (item.containsKey('codigo_retorno') && item['codigo_retorno'] != null) {
+                  hasCodigoRetorno = true;
+                }
+                
+                final sim = item['similaridade'];
+                double simVal = 0.0;
+                if (sim is num) simVal = sim.toDouble();
+                if (sim is String) simVal = double.tryParse(sim) ?? 0.0;
+                
+                if (simVal > 0.85) {
+                  hasHighSimilarity = true;
+                  return true;
+                }
+                return false;
+              }).toList();
+
+              if (!hasHighSimilarity && hasCodigoRetorno && retries < maxRetries) {
+                shouldRetry = true;
+                retries++;
+                await Future.delayed(const Duration(seconds: 1));
+                continue; // Volta para o início do do-while
+              }
+
+              if (matchFingers.isNotEmpty) {
+                final dedos = matchFingers
+                    .map((e) => '${e['posicao']} (${e['similaridade']})')
+                    .join(', ');
+                statusMsg = '✓ Match encontrado: $dedos';
+              } else {
+                statusMsg = '✗ Nenhum dedo com similaridade > 0.85';
+              }
+            }
+          } catch (e) {
+            debugPrint('Erro ao parsear JSON de resposta: $e');
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _validationStatus = statusMsg;
+          });
+        }
+      } while (shouldRetry);
+
     } catch (e) {
       _isValidating = false;
       if (mounted) {
@@ -258,7 +298,9 @@ class _MyAppState extends State<MyApp> {
                       ? (_validationStatusCode == 200
                           ? Colors.green.shade50
                           : Colors.orange.shade50)
-                      : (_isValidating ? Colors.blue.shade50 : Colors.grey.shade100),
+                      : (_isValidating
+                          ? Colors.blue.shade50
+                          : Colors.grey.shade100),
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
@@ -272,7 +314,8 @@ class _MyAppState extends State<MyApp> {
                                 child: SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
                               )
                             else if (_hasValidated)
@@ -348,10 +391,11 @@ class _MyAppState extends State<MyApp> {
                     ElevatedButton.icon(
                       onPressed: isScanning
                           ? () async {
-                              isScanning = !((await _futronicFingerprintScannerPlugin
-                                      .methods
-                                      .stop()) ??
-                                  false);
+                              isScanning =
+                                  !((await _futronicFingerprintScannerPlugin
+                                          .methods
+                                          .stop()) ??
+                                      false);
                               setState(() {});
                             }
                           : null,
