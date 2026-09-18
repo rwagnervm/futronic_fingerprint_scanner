@@ -103,25 +103,40 @@ public class FutronicFingerprintScannerPlugin
         } else if (call.method.equals("stop")) {
             result.success(stopButton());
         } else if (call.method.equals("setCheckFrame")) {
-            if (mStop)
+            if (mStop) {
+                result.success(null);
                 return;
+            }
             mFrame = Boolean.TRUE.equals(call.argument("value"));
+            result.success(null);
         } else if (call.method.equals("setCheckLFD")) {
-            if (mStop)
+            if (mStop) {
+                result.success(null);
                 return;
+            }
             mLFD = Boolean.TRUE.equals(call.argument("value"));
+            result.success(null);
         } else if (call.method.equals("setCheckInvert")) {
-            if (mStop)
+            if (mStop) {
+                result.success(null);
                 return;
+            }
             mInvertImage = Boolean.TRUE.equals(call.argument("value"));
+            result.success(null);
         } else if (call.method.equals("setCheckUSB")) {
-            if (mStop)
+            if (mStop) {
+                result.success(null);
                 return;
+            }
             mUsbHostMode = Boolean.TRUE.equals(call.argument("value"));
+            result.success(null);
         } else if (call.method.equals("setCheckNFIQ")) {
-            if (mStop)
+            if (mStop) {
+                result.success(null);
                 return;
+            }
             mNFIQ = Boolean.TRUE.equals(call.argument("value"));
+            result.success(null);
 
             // isChecked
         } else if (call.method.equals("isFrameChecked")) {
@@ -372,8 +387,10 @@ public class FutronicFingerprintScannerPlugin
             } else {
                 // Log.v(TAG,"Permission is revoked");
                 if (activity != null) {
-                    ActivityCompat.requestPermissions(activity, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+                    ActivityCompat.requestPermissions(activity,
+                            new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                            1);
                 }
                 return false;
             }
