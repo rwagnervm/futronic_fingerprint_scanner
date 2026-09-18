@@ -4,6 +4,7 @@ import 'package:futronic_fingerprint_scanner/futronic_fingerprint_scanner_platfo
 import 'package:futronic_fingerprint_scanner/futronic_fingerprint_scanner_method_channel.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final FutronicFingerprintScannerPlatform initialPlatform =
       FutronicFingerprintScannerPlatform.instance;
 

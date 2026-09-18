@@ -89,6 +89,10 @@ abstract class FutronicFingerprintScannerPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
+  Future<Uint8List?> getWSQBytes() {
+    throw UnimplementedError('getWSQBytes() has not been implemented.');
+  }
+
   Future<void> saveImage(FileFormat fileFormat, String filePath, String fileName) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }

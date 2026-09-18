@@ -141,6 +141,9 @@ public class FutronicFingerprintScannerPlugin
         } else if (call.method.equals("getFingerprintImageBytes")) {
             result.success(mImageFP);
 
+        } else if (call.method.equals("getWSQBytes")) {
+            result.success(getWSQBytes());
+
         } else if (call.method.equals("saveImage")) {
             if (isStoragePermissionGranted()) {
                 SaveImageByFileFormat(Objects.requireNonNull(call.argument("fileFormat")),
@@ -358,6 +361,9 @@ public class FutronicFingerprintScannerPlugin
     }
 
     public boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 29) {
+            return true;
+        }
         if (Build.VERSION.SDK_INT >= 23) {
             if (context.checkSelfPermission(
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
@@ -365,13 +371,51 @@ public class FutronicFingerprintScannerPlugin
                 return true;
             } else {
                 // Log.v(TAG,"Permission is revoked");
-                ActivityCompat.requestPermissions(activity, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+                if (activity != null) {
+                    ActivityCompat.requestPermissions(activity, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+                }
                 return false;
             }
         } else { // permission is automatically granted on sdk<23 upon installation
             // Log.v(TAG,"Permission is granted");
             return true;
+        }
+    }
+
+    private byte[] getWSQBytes() {
+        if (mImageFP == null || mImageWidth == 0 || mImageHeight == 0) {
+            return null;
+        }
+        Scanner devScan = new Scanner();
+        boolean bRet;
+        if (mUsbHostMode) {
+            if (usb_host_ctx == null)
+                init();
+            bRet = devScan.OpenDeviceOnInterfaceUsbHost(usb_host_ctx);
+        } else {
+            bRet = devScan.OpenDevice();
+        }
+        if (!bRet) {
+            return null;
+        }
+        try {
+            byte[] wsqImg = new byte[mImageWidth * mImageHeight];
+            long hDevice = devScan.GetDeviceHandle();
+            ftrWsqAndroidHelper wsqHelper = new ftrWsqAndroidHelper();
+            if (wsqHelper.ConvertRawToWsq(hDevice, mImageWidth, mImageHeight, 2.25f, mImageFP, wsqImg)) {
+                byte[] finalWsq = new byte[wsqHelper.mWSQ_size];
+                System.arraycopy(wsqImg, 0, finalWsq, 0, wsqHelper.mWSQ_size);
+                return finalWsq;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (mUsbHostMode)
+                devScan.CloseDeviceUsbHost();
+            else
+                devScan.CloseDevice();
         }
     }
 

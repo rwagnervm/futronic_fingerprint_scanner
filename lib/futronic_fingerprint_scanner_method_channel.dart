@@ -102,6 +102,12 @@ class MethodChannelFutronicFingerprintScanner
   }
 
   @override
+  Future<Uint8List?> getWSQBytes() async {
+    final result = await methodChannel.invokeMethod<Uint8List>('getWSQBytes');
+    return result;
+  }
+
+  @override
   Future<void> saveImage(
       FileFormat fileFormat, String filePath, String fileName) {
     return methodChannel.invokeMethod<void>('saveImage', {
