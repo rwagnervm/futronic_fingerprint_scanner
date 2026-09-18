@@ -64,31 +64,43 @@ class _MyAppState extends State<MyApp> {
                     onPressed: isScanning
                         ? null
                         : () async {
-                            isScanning = (await _futronicFingerprintScannerPlugin.methods.scan()) ?? false;
+                            isScanning =
+                                (await _futronicFingerprintScannerPlugin.methods
+                                        .scan()) ??
+                                    false;
                             if (isScanning) {
                               await Future.delayed(const Duration(seconds: 1));
-                              scannerSize = await _futronicFingerprintScannerPlugin.methods.getScannerSize() ?? Size(9, 13);
+                              scannerSize =
+                                  await _futronicFingerprintScannerPlugin
+                                          .methods
+                                          .getScannerSize() ??
+                                      const Size(9, 13);
                               if (scannerSize == Size.zero) {
-                                scannerSize = Size(9, 13);
+                                scannerSize = const Size(9, 13);
                               }
                               print('scannerSize: $scannerSize');
                             }
                             setState(() {});
                           },
-                    child: Text('Start Scan')),
+                    child: const Text('Start Scan')),
                 TextButton(
                     onPressed: isScanning
                         ? () async {
-                            isScanning = !((await _futronicFingerprintScannerPlugin.methods.stop()) ?? false);
+                            isScanning =
+                                !((await _futronicFingerprintScannerPlugin
+                                        .methods
+                                        .stop()) ??
+                                    false);
                             setState(() {});
                           }
                         : null,
-                    child: Text('Stop')),
+                    child: const Text('Stop')),
                 TextButton(
                     onPressed: isScanning
                         ? () {
                             invertChecked = !invertChecked;
-                            _futronicFingerprintScannerPlugin.methods.setCheckInvert(invertChecked);
+                            _futronicFingerprintScannerPlugin.methods
+                                .setCheckInvert(invertChecked);
                             setState(() {});
                           }
                         : null,
@@ -97,7 +109,8 @@ class _MyAppState extends State<MyApp> {
                     onPressed: isScanning
                         ? () {
                             nfiqChecked = !nfiqChecked;
-                            _futronicFingerprintScannerPlugin.methods.setCheckNFIQ(nfiqChecked);
+                            _futronicFingerprintScannerPlugin.methods
+                                .setCheckNFIQ(nfiqChecked);
                             setState(() {});
                           }
                         : null,
@@ -106,7 +119,8 @@ class _MyAppState extends State<MyApp> {
                     onPressed: isScanning
                         ? () {
                             lfdChecked = !lfdChecked;
-                            _futronicFingerprintScannerPlugin.methods.setCheckLFD(lfdChecked);
+                            _futronicFingerprintScannerPlugin.methods
+                                .setCheckLFD(lfdChecked);
                             setState(() {});
                           }
                         : null,
@@ -125,20 +139,24 @@ class _MyAppState extends State<MyApp> {
             TextButton(
                 onPressed: isScanning
                     ? () async {
-                        Directory appDocDir = await getApplicationDocumentsDirectory();
+                        Directory appDocDir =
+                            await getApplicationDocumentsDirectory();
                         String appDocPath = appDocDir.path;
                         const fileFormat = FileFormat.bitmap;
                         final fileName = 'test${fileFormat.extension}';
                         print(appDocPath);
-                        _futronicFingerprintScannerPlugin.methods.saveImage(fileFormat, appDocPath, '/$fileName');
+                        _futronicFingerprintScannerPlugin.methods
+                            .saveImage(fileFormat, appDocPath, '/$fileName');
                         setState(() {});
                       }
                     : null,
-                child: Text('Save')),
+                child: const Text('Save')),
             TextButton(
                 onPressed: isScanning
                     ? () async {
-                        _futronicFingerprintScannerPlugin.methods.getFingerprintImageBytes().then((value) {
+                        _futronicFingerprintScannerPlugin.methods
+                            .getFingerprintImageBytes()
+                            .then((value) {
                           if (value != null) {
                             print(value);
                           }
@@ -146,7 +164,7 @@ class _MyAppState extends State<MyApp> {
                         setState(() {});
                       }
                     : null,
-                child: Text('get bytes')),
+                child: const Text('get bytes')),
           ],
         ),
       ),

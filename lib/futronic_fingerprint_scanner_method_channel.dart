@@ -1,20 +1,21 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:futronic_fingerprint_scanner/futronic_fingerprint_scanner.dart';
 
 import 'futronic_fingerprint_scanner_platform_interface.dart';
 
 /// An implementation of [FutronicFingerprintScannerPlatform] that uses method channels.
-class MethodChannelFutronicFingerprintScanner extends FutronicFingerprintScannerPlatform {
+class MethodChannelFutronicFingerprintScanner
+    extends FutronicFingerprintScannerPlatform {
   /// The method channel used to interact with the native platform.
   @override
   final methodChannel = const MethodChannel('futronic_fingerprint_scanner');
 
   @override
   Future<String?> getPlatformVersion() async {
-    final result = await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final result =
+        await methodChannel.invokeMethod<String>('getPlatformVersion');
     return result;
   }
 
@@ -89,17 +90,24 @@ class MethodChannelFutronicFingerprintScanner extends FutronicFingerprintScanner
   Future<Size?> getScannerSize() async {
     final result = await methodChannel.invokeMethod<String>('getScannerSize');
     Map? map = jsonDecode(result);
-    return Size(map?['width']?.toDouble() ?? 0.0, map?['height']?.toDouble() ?? 0.0);
+    return Size(
+        map?['width']?.toDouble() ?? 0.0, map?['height']?.toDouble() ?? 0.0);
   }
 
   @override
   Future<Uint8List?> getFingerprintImageBytes() async {
-    final result = await methodChannel.invokeMethod<Uint8List>('getFingerprintImageBytes');
+    final result =
+        await methodChannel.invokeMethod<Uint8List>('getFingerprintImageBytes');
     return result;
   }
 
   @override
-  Future<void> saveImage(FileFormat fileFormat, String filePath, String fileName) {
-    return methodChannel.invokeMethod<void>('saveImage', {'fileFormat': fileFormat.value, 'fileName': fileName, 'filePath': filePath});
+  Future<void> saveImage(
+      FileFormat fileFormat, String filePath, String fileName) {
+    return methodChannel.invokeMethod<void>('saveImage', {
+      'fileFormat': fileFormat.value,
+      'fileName': fileName,
+      'filePath': filePath
+    });
   }
 }

@@ -44,10 +44,13 @@ import io.flutter.plugin.common.PluginRegistry;
 /**
  * FutronicFingerprintScannerPlugin
  */
-public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.RequestPermissionsResultListener {
-    /// The MethodChannel that will the communication between Flutter and native Android
+public class FutronicFingerprintScannerPlugin
+        implements FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.RequestPermissionsResultListener {
+    /// The MethodChannel that will the communication between Flutter and native
+    /// Android
     ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    /// This local reference serves to register the plugin with the Flutter Engine
+    /// and unregister it
     /// when the Flutter Engine is detached from the Activity
     public static boolean mStop = false;
     public static boolean mFrame = true;
@@ -100,19 +103,24 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
         } else if (call.method.equals("stop")) {
             result.success(stopButton());
         } else if (call.method.equals("setCheckFrame")) {
-            if (mStop) return;
+            if (mStop)
+                return;
             mFrame = Boolean.TRUE.equals(call.argument("value"));
         } else if (call.method.equals("setCheckLFD")) {
-            if (mStop) return;
+            if (mStop)
+                return;
             mLFD = Boolean.TRUE.equals(call.argument("value"));
         } else if (call.method.equals("setCheckInvert")) {
-            if (mStop) return;
+            if (mStop)
+                return;
             mInvertImage = Boolean.TRUE.equals(call.argument("value"));
         } else if (call.method.equals("setCheckUSB")) {
-            if (mStop) return;
+            if (mStop)
+                return;
             mUsbHostMode = Boolean.TRUE.equals(call.argument("value"));
         } else if (call.method.equals("setCheckNFIQ")) {
-            if (mStop) return;
+            if (mStop)
+                return;
             mNFIQ = Boolean.TRUE.equals(call.argument("value"));
 
             // isChecked
@@ -135,7 +143,8 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
 
         } else if (call.method.equals("saveImage")) {
             if (isStoragePermissionGranted()) {
-                SaveImageByFileFormat(Objects.requireNonNull(call.argument("fileFormat")), call.argument("filePath") + ((String) call.argument("fileName")));
+                SaveImageByFileFormat(Objects.requireNonNull(call.argument("fileFormat")),
+                        call.argument("filePath") + ((String) call.argument("fileName")));
                 result.success(true);
                 return;
             }
@@ -190,6 +199,9 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
 
     private boolean scanButton() {
         boolean isSuccessful = true;
+        if (usb_host_ctx == null) {
+            init();
+        }
         if (mFPScan != null) {
             mStop = true;
             mFPScan.stop();
@@ -197,13 +209,17 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
         }
         mStop = false;
         if (mUsbHostMode) {
-            usb_host_ctx.CloseDevice();
+            if (usb_host_ctx != null) {
+                usb_host_ctx.CloseDevice();
+            }
             if (usb_host_ctx.OpenDevice(0, true)) {
                 if (StartScan()) {
-                   /* mButtonScan.setEnabled(false);
-                    mButtonSave.setEnabled(false);
-                    mCheckUsbHostMode.setEnabled(false);
-                    mButtonStop.setEnabled(true);*/
+                    /*
+                     * mButtonScan.setEnabled(false);
+                     * mButtonSave.setEnabled(false);
+                     * mCheckUsbHostMode.setEnabled(false);
+                     * mButtonStop.setEnabled(true);
+                     */
                 }
             } else {
                 if (!usb_host_ctx.IsPendingOpen()) {
@@ -213,10 +229,12 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
             }
         } else {
             if (StartScan()) {
-               /* mButtonScan.setEnabled(false);
-                mButtonSave.setEnabled(false);
-                mCheckUsbHostMode.setEnabled(false);
-                mButtonStop.setEnabled(true);*/
+                /*
+                 * mButtonScan.setEnabled(false);
+                 * mButtonSave.setEnabled(false);
+                 * mCheckUsbHostMode.setEnabled(false);
+                 * mButtonStop.setEnabled(true);
+                 */
             }
         }
         return isSuccessful;
@@ -229,10 +247,12 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
             mFPScan = null;
 
         }
-        /*mButtonScan.setEnabled(true);
-        mButtonSave.setEnabled(true);
-        mCheckUsbHostMode.setEnabled(true);
-        mButtonStop.setEnabled(false);*/
+        /*
+         * mButtonScan.setEnabled(true);
+         * mButtonSave.setEnabled(true);
+         * mCheckUsbHostMode.setEnabled(true);
+         * mButtonStop.setEnabled(false);
+         */
 
         return true;
     }
@@ -266,28 +286,32 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
                 case MESSAGE_SHOW_SCANNER_INFO:
                     String showMsg = (String) msg.obj;
                     channel.invokeMethod("message", showMsg);
-                    //mMessage.setText(showMsg);
+                    // mMessage.setText(showMsg);
                     break;
                 case MESSAGE_SHOW_IMAGE:
                     ShowBitmap();
                     break;
                 case MESSAGE_ERROR:
-                    //mFPScan = null;
+                    // mFPScan = null;
                     isScanButton = true;
-                   /* mButtonScan.setEnabled(true);
-                    mCheckUsbHostMode.setEnabled(true);
-                    mButtonStop.setEnabled(false);*/
+                    /*
+                     * mButtonScan.setEnabled(true);
+                     * mCheckUsbHostMode.setEnabled(true);
+                     * mButtonStop.setEnabled(false);
+                     */
                     break;
                 case UsbDeviceDataExchangeImpl.MESSAGE_ALLOW_DEVICE:
-                    if (usb_host_ctx.ValidateContext()) {
+                    if (usb_host_ctx != null && usb_host_ctx.ValidateContext()) {
                         if (StartScan()) {
-                            /*mButtonScan.setEnabled(false);
-                            mButtonSave.setEnabled(false);
-                            mCheckUsbHostMode.setEnabled(false);
-                            mButtonStop.setEnabled(true);*/
+                            /*
+                             * mButtonScan.setEnabled(false);
+                             * mButtonSave.setEnabled(false);
+                             * mCheckUsbHostMode.setEnabled(false);
+                             * mButtonStop.setEnabled(true);
+                             */
                         }
                     } else
-                        //mMessage.setText("Can't open scanner device");
+                        // mMessage.setText("Can't open scanner device");
                         break;
                 case UsbDeviceDataExchangeImpl.MESSAGE_DENY_DEVICE:
                     channel.invokeMethod("message", "User deny scanner device");
@@ -311,9 +335,11 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
             mFPScan.stop();
             mFPScan = null;
         }
-        usb_host_ctx.CloseDevice();
-        usb_host_ctx.Destroy();
-        usb_host_ctx = null;
+        if (usb_host_ctx != null) {
+            usb_host_ctx.CloseDevice();
+            usb_host_ctx.Destroy();
+            usb_host_ctx = null;
+        }
 
     }
 
@@ -321,6 +347,9 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
     public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
         activity = binding.getActivity();
         binding.addRequestPermissionsResultListener(this);
+        if (usb_host_ctx == null) {
+            init();
+        }
     }
 
     @Override
@@ -330,28 +359,32 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
 
     public boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
-            if (context.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                //Log.v(TAG,"Permission is granted");
+            if (context.checkSelfPermission(
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                // Log.v(TAG,"Permission is granted");
                 return true;
             } else {
-                //Log.v(TAG,"Permission is revoked");
-                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                // Log.v(TAG,"Permission is revoked");
+                ActivityCompat.requestPermissions(activity, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
                 return false;
             }
-        } else { //permission is automatically granted on sdk<23 upon installation
-            //Log.v(TAG,"Permission is granted");
+        } else { // permission is automatically granted on sdk<23 upon installation
+            // Log.v(TAG,"Permission is granted");
             return true;
         }
     }
 
     private void SaveImageByFileFormat(String fileFormat, String fileName) {
-        if (fileFormat.compareTo("WSQ") == 0)    //save wsq file
+        if (fileFormat.compareTo("WSQ") == 0) // save wsq file
         {
             Scanner devScan = new Scanner();
             boolean bRet;
-            if (mUsbHostMode)
+            if (mUsbHostMode) {
+                if (usb_host_ctx == null)
+                    init();
                 bRet = devScan.OpenDeviceOnInterfaceUsbHost(usb_host_ctx);
-            else
+            } else
                 bRet = devScan.OpenDevice();
             if (!bRet) {
                 channel.invokeMethod("message", devScan.GetErrorMessage());
@@ -364,7 +397,7 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
                 File file = new File(fileName);
                 try {
                     FileOutputStream out = new FileOutputStream(file);
-                    out.write(wsqImg, 0, wsqHelper.mWSQ_size);    // save the wsq_size bytes data to file
+                    out.write(wsqImg, 0, wsqHelper.mWSQ_size); // save the wsq_size bytes data to file
                     out.close();
                     channel.invokeMethod("message", "Image is saved as " + fileName);
                 } catch (Exception e) {
@@ -382,7 +415,7 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
         File file = new File(fileName);
         try {
             FileOutputStream out = new FileOutputStream(file);
-            //mBitmapFP.compress(Bitmap.CompressFormat.PNG, 90, out);
+            // mBitmapFP.compress(Bitmap.CompressFormat.PNG, 90, out);
             MyBitmapFile fileBMP = new MyBitmapFile(mImageWidth, mImageHeight, mImageFP);
             out.write(fileBMP.toBytes());
             out.close();
@@ -393,12 +426,15 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
     }
 
     @Override
-    public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         if (requestCode == 1) {
-            //Log.v("FtrScanDemoUsbHost","Permission: "+permissions[0]+ "was "+grantResults[0]);
-            //Log.v("FtrScanDemoUsbHost","Permission: "+permissions[1]+ "was "+grantResults[1]);
+            // Log.v("FtrScanDemoUsbHost","Permission: "+permissions[0]+ "was
+            // "+grantResults[0]);
+            // Log.v("FtrScanDemoUsbHost","Permission: "+permissions[1]+ "was
+            // "+grantResults[1]);
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //resume tasks needing this permission
+                // resume tasks needing this permission
                 isScanButton = true;
             }
             return true;
@@ -406,19 +442,22 @@ public class FutronicFingerprintScannerPlugin implements FlutterPlugin, MethodCa
         return false;
     }
 
-    /*public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_FILE_FORMAT:
-                if (resultCode == Activity.RESULT_OK) {
-                    // Get the file format
-                    String[] extraString = data.getExtras().getStringArray(SelectFileFormatActivity.EXTRA_FILE_FORMAT);
-                    String fileFormat = extraString[0];
-                    String fileName = extraString[1];
-                    SaveImageByFileFormat(fileFormat, fileName);
-                }
-                else
-                    mMessage.setText("Cancelled!");
-                break;
-        }
-    }*/
+    /*
+     * public void onActivityResult(int requestCode, int resultCode, Intent data) {
+     * switch (requestCode) {
+     * case REQUEST_FILE_FORMAT:
+     * if (resultCode == Activity.RESULT_OK) {
+     * // Get the file format
+     * String[] extraString =
+     * data.getExtras().getStringArray(SelectFileFormatActivity.EXTRA_FILE_FORMAT);
+     * String fileFormat = extraString[0];
+     * String fileName = extraString[1];
+     * SaveImageByFileFormat(fileFormat, fileName);
+     * }
+     * else
+     * mMessage.setText("Cancelled!");
+     * break;
+     * }
+     * }
+     */
 }
